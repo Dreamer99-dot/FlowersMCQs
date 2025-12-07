@@ -240,16 +240,19 @@
       { name: "Azalea", folder: "azalea" },
       { name: "Begonia", folder: "begonia" },
       { name: "Bird of Paradise", folder: "bird_of_paradise_flower" },
+      { name: "Black Rose", folder: "black_rose" },
       { name: "Bluebell", folder: "bluebell" },
       { name: "Blue Hibiscus", folder: "blue_hibiscus" },
       { name: "Blue Orchid", folder: "blue_orchid" },
       { name: "Bougainvillea", folder: "bougainvillea" },
       { name: "Buttercup", folder: "buttercup" },
       { name: "Butterfly Pea", folder: "butterfly_pea_flower" },
+      { name: "Cactus Flower", folder: "cactus_flower" },
       { name: "Calendula", folder: "calendula" },
       { name: "Camellia", folder: "camellia" },
       { name: "Camellia (White)", folder: "camellia_white" },
       { name: "Carnation", folder: "carnation" },
+      { name: "Champa Flower", folder: "champa_flower" },
       { name: "Chrysanthemum", folder: "chrysanthemum" },
       { name: "Cornflower", folder: "cornflower" },
       { name: "Cosmos", folder: "cosmos" },
@@ -279,11 +282,17 @@
       { name: "Lotus", folder: "lotus" },
       { name: "Lotus (Pink)", folder: "lotus_pink" },
       { name: "Magnolia", folder: "magnolia" },
+      { name: "Mallow", folder: "mallow" },
+      { name: "Mallow (Purple)", folder: "mallow_purple" },
       { name: "Marigold", folder: "marigold" },
       { name: "Morning Glory", folder: "morning_glory" },
+      { name: "Naag Champa", folder: "naag_champa_flower" },
       { name: "Nasturtium", folder: "nasturtium" },
+      { name: "Orange Marigold", folder: "orange_marigold" },
       { name: "Orchid", folder: "orchid" },
       { name: "Pansy", folder: "pansy" },
+      { name: "Pasque Flower", folder: "pasque_flower" },
+      { name: "Peach Blossom", folder: "peach_blossom" },
       { name: "Peony", folder: "peony" },
       { name: "Petunia", folder: "petunia" },
       { name: "Pink Lily", folder: "pink_lily" },
@@ -291,7 +300,10 @@
       { name: "Plumeria", folder: "plumeria" },
       { name: "Poppy", folder: "poppy" },
       { name: "Primrose", folder: "primrose" },
-      { name: "Proteus", folder: "proteus_flower" },
+      { name: "Proteus Flower", folder: "proteus_flower" },
+      { name: "Purple Lotus", folder: "purple_lotus" },
+      { name: "Queen Anne's Lace", folder: "queen_anne's_lace" },
+      { name: "Ranunculus", folder: "ranunculus" },
       { name: "Red Poppy", folder: "red_poppy" },
       { name: "Red Rose", folder: "red_rose" },
       { name: "Rhododendron", folder: "rhododendron" },
@@ -299,6 +311,7 @@
       { name: "Rose of Sharon", folder: "rose_of_sharon" },
       { name: "Sage Flower", folder: "sage_flower" },
       { name: "Salvia", folder: "salvia_flower" },
+      { name: "Scarlet Pimpernel", folder: "scarlet_pimpernel" },
       { name: "Snapdragon", folder: "snapdragon" },
       { name: "Snowdrop", folder: "snowdrop" },
       { name: "Snowflake Flower", folder: "snowflake_flower" },
@@ -327,13 +340,17 @@
     }
 
     function makeOptions(correctIndex) {
-      const optionFlowers = [baseFlowers[correctIndex]];
-      let offset = 1;
+      const optionFlowers = [];
+      let offset = 0;
       while (optionFlowers.length < 4) {
         const next = baseFlowers[(correctIndex + offset) % baseFlowers.length];
-        optionFlowers.push(next);
+        if (!optionFlowers.includes(next)) optionFlowers.push(next);
         offset++;
       }
+      const correctSlot = correctIndex % 4;
+      const correctFlower = optionFlowers.shift();
+      optionFlowers.splice(correctSlot, 0, correctFlower);
+
       return optionFlowers.map((f, idx) => ({
         name: f.name,
         src: imagePath(f),
@@ -343,13 +360,17 @@
     }
 
     function createQuestions() {
-      return baseFlowers.map((flower, idx) => ({
-        prompt: "Which flower is shown in the picture?",
-        flowerName: flower.name,
-        image: imagePath(flower),
-        answer: 0,
-        options: makeOptions(idx),
-      }));
+      return baseFlowers.map((flower, idx) => {
+        const options = makeOptions(idx);
+        const answerIndex = options.findIndex(opt => opt.folder === flower.folder);
+        return {
+          prompt: "Which flower is shown in the picture?",
+          flowerName: flower.name,
+          image: imagePath(flower),
+          answer: answerIndex,
+          options,
+        };
+      });
     }
 
     const questions = createQuestions();
@@ -467,3 +488,4 @@
   </script>
 </body>
 </html>
+<-lc hostname- test --->
