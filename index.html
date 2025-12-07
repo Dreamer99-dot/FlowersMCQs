@@ -339,17 +339,32 @@
       return `flowers/${flower.folder}/000001${ext}`;
     }
 
-    function makeOptions(correctIndex) {
-      const optionFlowers = [];
-      let offset = 0;
-      while (optionFlowers.length < 4) {
-        const next = baseFlowers[(correctIndex + offset) % baseFlowers.length];
-        if (!optionFlowers.includes(next)) optionFlowers.push(next);
-        offset++;
+    function seededRandom(seedString) {
+      let seed = Array.from(seedString).reduce((acc, ch) => (acc * 31 + ch.charCodeAt(0)) >>> 0, 0) || 1;
+      return () => {
+        seed = (1664525 * seed + 1013904223) >>> 0;
+        return seed / 0xffffffff;
+      };
+    }
+
+    function shuffleWithSeed(array, rand) {
+      const arr = array.slice();
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
       }
-      const correctSlot = correctIndex % 4;
-      const correctFlower = optionFlowers.shift();
-      optionFlowers.splice(correctSlot, 0, correctFlower);
+      return arr;
+    }
+
+    function makeOptions(correctIndex) {
+      const correctFlower = baseFlowers[correctIndex];
+      const rand = seededRandom(correctFlower.folder);
+      const distractorPool = baseFlowers
+        .map((f, i) => ({ f, i }))
+        .filter(entry => entry.i !== correctIndex);
+      const shuffledPool = shuffleWithSeed(distractorPool, rand);
+      const picks = shuffledPool.slice(0, 3).map(entry => entry.f);
+      const optionFlowers = shuffleWithSeed([correctFlower, ...picks], rand);
 
       return optionFlowers.map((f, idx) => ({
         name: f.name,
