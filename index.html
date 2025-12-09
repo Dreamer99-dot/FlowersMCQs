@@ -400,6 +400,8 @@
     const nextBtn = document.getElementById("nextBtn");
     const endState = document.getElementById("endState");
     const questionListEl = document.getElementById("questionList");
+    let audioCtx;
+    const synth = window.speechSynthesis;
 
     let current = 0;
     let score = 0;
@@ -421,6 +423,39 @@
         current = targetIndex;
         renderQuestion();
       });
+    }
+
+    function speakCorrectAnswer(name) {
+      if (!synth) return;
+      synth.cancel();
+      const utterance = new SpeechSynthesisUtterance(`Correct answer is ${name}.`);
+      utterance.rate = 0.95;
+      utterance.pitch = 1;
+      utterance.volume = 1;
+      synth.speak(utterance);
+    }
+
+    function playSound(kind) {
+      try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return;
+        audioCtx = audioCtx || new Ctx();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const now = audioCtx.currentTime;
+        const isCorrect = kind === "correct";
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(isCorrect ? 880 : 220, now);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.42);
+      } catch (err) {
+        console.warn("Audio not available", err);
+      }
     }
 
     function markListCurrent() {
@@ -458,6 +493,7 @@
       if (locked) return;
       locked = true;
       const q = questions[current];
+      const correctName = q.options[q.answer].name;
       const optionButtons = Array.from(document.querySelectorAll(".option"));
       optionButtons.forEach(btn => btn.classList.add("disabled"));
 
@@ -465,11 +501,14 @@
         element.classList.add("correct");
         feedbackEl.textContent = "Nice! That's correct.";
         score++;
+        playSound("correct");
       } else {
         element.classList.add("wrong");
         optionButtons[q.answer].classList.add("correct");
         feedbackEl.textContent = "Not quite. The green highlight is the right one.";
+        playSound("wrong");
       }
+      speakCorrectAnswer(correctName);
       scoreLineEl.textContent = `Score: ${score}`;
       progressEl.style.width = `${((current + 1) / questions.length) * 100}%`;
       nextBtn.disabled = true;
